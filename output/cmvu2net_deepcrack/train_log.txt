@@ -1,0 +1,5 @@
+2026-02-12 21:56:31 [INFO]     [TRAIN] Epoch: 1/800, Average Loss: 4.0642, LR: 0.001000
+2026-02-12 21:56:34 [INFO]     [TRAIN] Epoch: 2/800, Average Loss: 1.6446, LR: 0.001000
+2026-02-12 21:56:36 [INFO]     [TRAIN] Epoch: 3/800, Average Loss: 1.0850, LR: 0.001000
+2026-02-12 21:56:39 [INFO]     [TRAIN] Epoch: 4/800, Average Loss: 0.8444, LR: 0.001000
+
