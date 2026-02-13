@@ -65,7 +65,6 @@ def parse_args():
         choices=['cpu', 'gpu'],
         type=str)
     
-    # 新增：批处理大小
     parser.add_argument(
         '--batch_size',
         dest='batch_size',
@@ -101,15 +100,8 @@ def calculate_metrics(preds, labels, ignore_index=255):
         class_recalls.append(recall)
     mIoU = np.mean(class_ious)
     accuracy = (preds == labels).sum().item() / total_samples if total_samples > 0 else 0.0
-    po = accuracy
-    pe = 0
-    for class_id in range(num_classes):
-        pred_prob = (preds == class_id).sum().item() / total_samples
-        label_prob = (labels == class_id).sum().item() / total_samples
-        pe += pred_prob * label_prob
-    kappa_val = (po - pe) / (1 - pe) if (1 - pe) > 0 else 0.0
-    fg_iou = class_ious[1] if num_classes > 1 else 0.0
-    dice_val = 2 * fg_iou / (1 + fg_iou) if (1 + fg_iou) > 0 else 0.0
+    kappa_val = 0.0
+    dice_val = 0.0
     return {
         'mIoU': mIoU,
         'accuracy': accuracy,
@@ -299,14 +291,13 @@ def evaluate(model, eval_dataset, device, num_workers=0, save_dir=None, print_de
                         colored_mask[mask_bin_resized > 0] = [0, 0, 255]
                         overlay = cv2.addWeighted(overlay, 0.7, colored_mask, 0.3, 0)
                         cv2.imwrite(os.path.join(save_dir, 'overlay', mask_name), overlay)
-    total_time = time.time() - eval_start_time
-    fps = len(eval_dataset) / total_time if total_time > 0 else 0.0
+
     all_preds_np = np.concatenate(all_preds, axis=0)
     all_labels_np = np.concatenate(all_labels, axis=0)
     metrics = calculate_metrics(torch.tensor(all_preds_np), torch.tensor(all_labels_np))
     if print_detail:
-        logger.info("[EVAL] Image-level #Images: {} mIoU: {:.4f} Acc: {:.4f} Kappa: {:.4f} Dice: {:.4f} FPS: {:.2f}".format(
-            len(eval_dataset), metrics['mIoU'], metrics['accuracy'], metrics['kappa'], metrics['dice'], fps))
+        logger.info("[EVAL] Image-level #Images: {} mIoU: {:.4f} Acc: {:.4f}".format(
+            len(eval_dataset), metrics['mIoU'], metrics['accuracy']))
         logger.info("[EVAL] Image-level Class IoU: \n" + str(np.round(np.array(metrics['class_ious']), 8)))
         logger.info("[EVAL] Image-level Class Precision: \n" + str(np.round(np.array(metrics['class_precisions']), 8)))
         logger.info("[EVAL] Image-level Class Recall: \n" + str(np.round(np.array(metrics['class_recalls']), 8)))
